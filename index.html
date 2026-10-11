@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BilanClair</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#26344A;--ink-soft:#4A5A70;
+    --bg:#F1F3F5;--card:#FFFFFF;--border:#E1E5EA;
+    --success:#2D9C7F;--success-bg:#E2F4EE;
+    --danger:#C15B3D;--danger-bg:#FBEBE5;
+    --gold:#C9972E;--gold-bg:#FBF1DD;
+    --sub:#6B7688;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);margin:0;line-height:1.5;}
+  .wrap{max-width:420px;margin:0 auto;padding:1.25rem 1.25rem 3rem;}
+  header{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0 1.25rem;}
+  .logo{font-size:16px;font-weight:700;color:var(--ink);}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .tabs{display:flex;gap:6px;background:var(--card);border-radius:12px;padding:4px;margin-bottom:1.25rem;border:1px solid var(--border);}
+  .tab-btn{flex:1;text-align:center;padding:9px;font-size:13px;font-weight:600;color:var(--sub);background:none;border:none;border-radius:9px;cursor:pointer;}
+  .tab-btn.active{background:var(--ink);color:#fff;}
+  .page{display:none;}
+  .page.active{display:block;}
+  .stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  .stat-card{border-radius:12px;padding:14px;}
+  .stat-card.income{background:var(--success-bg);cursor:pointer;}
+  .stat-card.expense{background:var(--danger-bg);}
+  .stat-label{font-size:11.5px;font-weight:600;margin-bottom:4px;}
+  .stat-card.income .stat-label{color:var(--success);}
+  .stat-card.expense .stat-label{color:var(--danger);}
+  .stat-val{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;}
+  .stat-card.income .stat-val{color:var(--success);}
+  .stat-card.expense .stat-val{color:var(--danger);}
+  .stat-hint{font-size:10px;color:var(--success);margin-top:2px;opacity:0.75;}
+  .net-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;}
+  .net-card span:first-child{font-size:13px;color:var(--sub);}
+  .net-card span:last-child{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;}
+  .section-title{font-size:12.5px;color:var(--sub);font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+  .add-btn{background:var(--ink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;}
+  .cat-row{padding:10px 0;border-bottom:1px solid var(--border);}
+  .cat-row:last-child{border-bottom:none;}
+  .cat-head{display:flex;align-items:center;gap:12px;}
+  .cat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+  .cat-name{font-size:14px;font-weight:600;}
+  .cat-sub{font-size:11.5px;color:var(--sub);margin-top:1px;}
+  .cat-amt{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;margin-left:auto;}
+  .entry-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0 6px 48px;font-size:12.5px;color:var(--sub);}
+  .entry-del{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;}
+  .empty-state{text-align:center;padding:2rem 1rem;color:var(--sub);font-size:13px;}
+  .field{margin-bottom:1rem;}
+  .field label{display:block;font-size:12px;color:var(--sub);font-weight:600;margin-bottom:6px;}
+  select, input[type="number"], input[type="text"]{
+    width:100%;font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);
+    background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;outline:none;
+  }
+  select:focus, input:focus{border-color:var(--ink-soft);}
+  .note-box{background:var(--gold-bg);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#8A6414;margin-bottom:1rem;line-height:1.5;}
+  .calc-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:1.25rem;}
+  .calc-row{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin-bottom:6px;}
+  .calc-total{display:flex;justify-content:space-between;font-size:15px;font-weight:700;padding-top:8px;border-top:1px solid var(--border);margin-top:8px;}
+  .calc-total span:last-child{color:var(--success);font-family:'IBM Plex Mono',monospace;}
+  .save-btn{width:100%;background:var(--ink);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;}
+  .export-btn{width:100%;background:var(--gold);color:#3D2B03;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;margin-top:1rem;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(38,52,74,0.5);align-items:center;justify-content:center;z-index:50;padding:1.25rem;}
+  .modal-overlay.active{display:flex;}
+  .modal-box{background:var(--card);border-radius:14px;padding:1.25rem;max-width:360px;width:100%;}
+  .modal-box h3{margin:0 0 1rem;font-size:15px;}
+  .rev-total{background:var(--success-bg);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;}
+  .rev-total span:first-child{font-size:13px;font-weight:600;color:var(--success);}
+  .rev-total span:last-child{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--success);}
+  .form-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:1.25rem;}
+  input[type="date"]{width:100%;font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;outline:none;}
+  .save-btn.green{background:var(--success);}
+  footer{text-align:center;font-size:11px;color:var(--sub);margin-top:2rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">📊 BilanClair</div>
+    <div class="avatar">👤</div>
+  </header>
+  <div class="tabs">
+    <button class="tab-btn active" data-page="dash">Tableau de bord</button>
+    <button class="tab-btn" data-page="rev">Revenus</button>
+    <button class="tab-btn" data-page="add">+ Dépense</button>
+  </div>
+  <div class="page active" id="page-dash">
+    <div class="stat-row">
+      <div class="stat-card income" onclick="switchTab('rev')">
+        <div class="stat-label">Revenus</div>
+        <div class="stat-val" id="dash-revenue">0 $</div>
+        <div class="stat-hint">Appuie pour voir le détail</div>
+      </div>
+      <div class="stat-card expense">
+        <div class="stat-label">Dépenses réelles</div>
+        <div class="stat-val" id="dash-total-deductible">0 $</div>
+      </div>
+    </div>
+    <div class="net-card">
+      <span>Net estimé (après déductions)</span>
+      <span id="dash-net">0 $</span>
+    </div>
+    <div class="section-title">
+      <span>Dépenses par catégorie</span>
+      <button class="add-btn" onclick="goToAdd()">+ Ajouter</button>
+    </div>
+    <div id="cat-list"></div>
+    <button class="export-btn" onclick="exportForAccountant()"><span>📄</span> Exporter pour comptable</button>
+  </div>
+  <div class="page" id="page-rev">
+    <div class="rev-total"><span>Revenus totaux</span><span id="rev-total">0 $</span></div>
+    <div class="form-card">
+      <div class="field">
+        <label>Source</label>
+        <select id="inc-cat">
+          <option value="contrat">🛠️ Contrat d'application</option>
+          <option value="coaching">🎓 Coaching (bloc ou forfait)</option>
+          <option value="smartgrocer">🛒 SmartGrocer</option>
+          <option value="autre">💰 Autre revenu</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Client ou description (optionnel)</label>
+        <input type="text" id="inc-desc" placeholder="Ex: Acompte 50 % — Boulangerie Dupuis">
+      </div>
+      <div class="field">
+        <label>Montant avant taxes</label>
+        <input type="number" id="inc-amount" placeholder="0.00" step="0.01">
+      </div>
+      <div class="field">
+        <label>TPS + TVQ perçues (optionnel)</label>
+        <input type="number" id="inc-tax" placeholder="0.00" step="0.01">
+      </div>
+      <div class="field">
+        <label>Date du paiement</label>
+        <input type="date" id="inc-date">
+      </div>
+      <button class="save-btn green" onclick="saveIncome()">Enregistrer le revenu</button>
+    </div>
+    <div class="section-title"><span>Revenus par source</span></div>
+    <div id="rev-list"></div>
+  </div>
+  <div class="page" id="page-add">
+    <div class="field">
+      <label>Catégorie</label>
+      <select id="cat-select" onchange="updateCalc()">
+        <option value="bureau">🏠 Bureau à domicile</option>
+        <option value="vehicule">🚗 Véhicule</option>
+        <option value="fournitures">🧰 Fournitures et matériel</option>
+        <option value="telecom">📱 Téléphone et internet</option>
+        <option value="pro">💼 Frais professionnels</option>
+        <option value="repas">🍽️ Repas d'affaires</option>
+        <option value="assurances">🛡️ Assurances commerciales</option>
+        <option value="marketing">📣 Publicité et marketing</option>
+        <option value="formation">📚 Formation</option>
+        <option value="bancaire">🏦 Frais bancaires et intérêts</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Description (optionnel)</label>
+      <input type="text" id="desc-input" placeholder="Ex: Facture Bell juillet">
+    </div>
+    <div class="field">
+      <label>Montant payé</label>
+      <input type="number" id="amount-input" value="" placeholder="0.00" step="0.01" oninput="updateCalc()">
+    </div>
+    <div class="field" id="pct-field" style="display:none;">
+      <label id="pct-label">% d'usage professionnel</label>
+      <input type="number" id="pct-input" value="40" min="0" max="100" oninput="updateCalc()">
+    </div>
+    <div class="note-box" id="note-box"></div>
+    <div class="calc-box">
+      <div class="calc-row"><span>Montant payé</span><span id="calc-amount">0,00 $</span></div>
+      <div class="calc-row"><span>Taux déductible</span><span id="calc-rate">50%</span></div>
+      <div class="calc-total"><span>Montant réellement déductible</span><span id="calc-final">0,00 $</span></div>
+    </div>
+    <button class="save-btn" onclick="saveExpense()">Enregistrer la dépense</button>
+  </div>
+  <footer>Ceci est un outil d'organisation, pas un conseil fiscal — consulte un comptable pour ta situation précise.<br>Tes données restent uniquement sur cet appareil.</footer>
+</div>
+<script>
+var CATEGORIES = {
+  bureau:      { name: 'Bureau à domicile', icon: '🏠', bg: '#E6F1FB', hasPct: true, defaultPct: 10, note: "Locataire : loyer, électricité, chauffage, eau, assurance locataire, internet, entretien. Propriétaire : intérêts hypothécaires (pas le capital), électricité, chauffage, assurance habitation, taxes foncières/scolaires, entretien." },
+  vehicule:    { name: 'Véhicule', icon: '🚗', bg: '#EEEDFE', hasPct: true, defaultPct: 40, note: "Essence, entretien/réparations, assurance auto, immatriculation, intérêts sur prêt auto (ou amortissement), stationnement d'affaires. Le permis de conduire n'est pas déductible — c'est une dépense personnelle, pas liée au travail." },
+  fournitures: { name: 'Fournitures et matériel', icon: '🧰', bg: '#E1F5EE', hasPct: false, fixedRate: 100, note: "Papeterie, imprimantes, ordinateurs, logiciels, petit équipement directement lié à ton travail — déductible à 100%." },
+  telecom:     { name: 'Téléphone et internet', icon: '📱', bg: '#FAEEDA', hasPct: true, defaultPct: 50, note: "La portion professionnelle de ton forfait cellulaire et de ton internet résidentiel — au prorata de ton usage réel pour le travail." },
+  pro:         { name: 'Frais professionnels', icon: '💼', bg: '#FAECE7', hasPct: false, fixedRate: 100, note: "Honoraires de comptable, avocat, notaire, consultant, sous-traitance, cotisations à un ordre professionnel. L'assurance-vie n'est PAS déductible." },
+  repas:       { name: "Repas d'affaires", icon: '🍽️', bg: '#FBEAF0', hasPct: false, fixedRate: 50, note: "Restaurants avec de vrais clients ou partenaires d'affaires — jamais tes repas personnels. Déductible à 50% seulement, selon Revenu Québec et l'ARC." },
+  assurances:  { name: 'Assurances commerciales', icon: '🛡️', bg: '#E8F0E6', hasPct: false, fixedRate: 100, note: "Assurance responsabilité professionnelle, assurance commerciale — déductible à 100%. Attention : l'assurance-vie, maladie et invalidité personnelle ne sont PAS déductibles, même si tu es travailleur autonome." },
+  marketing:   { name: 'Publicité et marketing', icon: '📣', bg: '#FDEDE3', hasPct: false, fixedRate: 100, note: "Site web, cartes d'affaires, publicités payantes, matériel promotionnel — tout ce qui sert à faire connaître ton travail est déductible à 100%." },
+  formation:   { name: 'Formation', icon: '📚', bg: '#EAF2FB', hasPct: false, fixedRate: 100, note: "Cours, séminaires, salons, livres et documentation liés directement à ton travail — déductible à 100%." },
+  bancaire:    { name: 'Frais bancaires et intérêts', icon: '🏦', bg: '#F3EEF9', hasPct: false, fixedRate: 100, note: "Frais de compte bancaire d'entreprise, frais de carte de crédit professionnelle, intérêts sur un emprunt d'entreprise — déductible à 100%." }
+};
+var STORAGE_KEY = 'bilanclair_data';
+var expenses = [];
+var revenue = 0;
+var incomes = [];
+var INCOME_CATS = {
+  contrat:     { name: "Contrat d'application", icon: "🛠️", bg: "#E6F1FB" },
+  coaching:    { name: "Coaching", icon: "🎓", bg: "#EEEDFE" },
+  smartgrocer: { name: "SmartGrocer", icon: "🛒", bg: "#E1F5EE" },
+  autre:       { name: "Autre revenu", icon: "💰", bg: "#FAEEDA" }
+};
+function loadData(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      var data = JSON.parse(raw);
+      expenses = data.expenses || [];
+      revenue = data.revenue || 0;
+      incomes = data.incomes || [];
+      if(revenue > 0 && incomes.length === 0){
+        incomes.push({ id: Date.now(), cat: 'autre', amount: revenue, tax: 0, desc: 'Revenus saisis avant la mise à jour', date: new Date().toISOString() });
+      }
+      revenue = 0;
+    }
+  }catch(e){ console.error('Erreur de chargement:', e); }
+}
+function saveData(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ expenses: expenses, revenue: 0, incomes: incomes }));
+  }catch(e){ console.error('Erreur de sauvegarde:', e); }
+}
+function fmt(n){ return (n||0).toLocaleString('fr-CA', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' $'; }
+function fmt0(n){ return Math.round(n||0).toLocaleString('fr-CA') + ' $'; }
+function updateCalc(){
+  var catKey = document.getElementById('cat-select').value;
+  var cat = CATEGORIES[catKey];
+  var amount = parseFloat(document.getElementById('amount-input').value) || 0;
+  var pctField = document.getElementById('pct-field');
+  var pctLabel = document.getElementById('pct-label');
+  var rate;
+  if(cat.hasPct){
+    pctField.style.display = 'block';
+    document.getElementById('pct-input').value = document.getElementById('pct-input').value || cat.defaultPct;
+    pctLabel.textContent = catKey === 'vehicule' ? "% d'usage professionnel (kilométrage)" : "% d'usage professionnel";
+    rate = parseFloat(document.getElementById('pct-input').value) || 0;
+  } else {
+    pctField.style.display = 'none';
+    rate = cat.fixedRate;
+  }
+  document.getElementById('note-box').textContent = cat.note;
+  document.getElementById('calc-amount').textContent = fmt(amount);
+  document.getElementById('calc-rate').textContent = rate + '%';
+  document.getElementById('calc-final').textContent = fmt(amount * rate / 100);
+}
+function saveExpense(){
+  var catKey = document.getElementById('cat-select').value;
+  var cat = CATEGORIES[catKey];
+  var amount = parseFloat(document.getElementById('amount-input').value) || 0;
+  if(amount <= 0){ alert('Entre un montant valide.'); return; }
+  var pct = cat.hasPct ? (parseFloat(document.getElementById('pct-input').value) || 0) : cat.fixedRate;
+  var desc = document.getElementById('desc-input').value.trim();
+  expenses.push({ id: Date.now(), cat: catKey, amount: amount, pct: pct, desc: desc, date: new Date().toISOString() });
+  saveData();
+  renderDashboard();
+  switchTab('dash');
+  document.getElementById('amount-input').value = '';
+  document.getElementById('desc-input').value = '';
+}
+function deleteExpense(id){
+  if(!confirm('Supprimer cette dépense?')) return;
+  expenses = expenses.filter(function(e){ return e.id !== id; });
+  saveData();
+  renderDashboard();
+}
+function totalRevenue(){ return incomes.reduce(function(sum, i){ return sum + i.amount; }, 0); }
+function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function todayStr(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function saveIncome(){
+  var amount = parseFloat(document.getElementById('inc-amount').value) || 0;
+  if(amount <= 0){ alert('Entre un montant valide.'); return; }
+  var tax = parseFloat(document.getElementById('inc-tax').value) || 0;
+  var dateVal = document.getElementById('inc-date').value || todayStr();
+  incomes.push({
+    id: Date.now(),
+    cat: document.getElementById('inc-cat').value,
+    amount: amount,
+    tax: tax,
+    desc: document.getElementById('inc-desc').value.trim(),
+    date: new Date(dateVal + 'T12:00:00').toISOString()
+  });
+  saveData();
+  renderDashboard();
+  document.getElementById('inc-amount').value = '';
+  document.getElementById('inc-tax').value = '';
+  document.getElementById('inc-desc').value = '';
+  document.getElementById('inc-date').value = todayStr();
+}
+function deleteIncome(id){
+  if(!confirm('Supprimer ce revenu?')) return;
+  incomes = incomes.filter(function(i){ return i.id !== id; });
+  saveData();
+  renderDashboard();
+}
+function renderIncomes(){
+  document.getElementById('rev-total').textContent = fmt(totalRevenue());
+  if(incomes.length === 0){
+    document.getElementById('rev-list').innerHTML = '<div class="empty-state">Aucun revenu enregistré pour l\'instant.<br>Ajoute ton premier paiement ci-dessus.</div>';
+    return;
+  }
+  var html = '';
+  Object.keys(INCOME_CATS).forEach(function(key){
+    var list = incomes.filter(function(i){ return i.cat === key; });
+    if(list.length === 0) return;
+    list.sort(function(a, b){ return new Date(b.date) - new Date(a.date); });
+    var cat = INCOME_CATS[key];
+    var total = list.reduce(function(sum, i){ return sum + i.amount; }, 0);
+    html += '<div class="cat-row"><div class="cat-head">' +
+      '<div class="cat-icon" style="background:' + cat.bg + ';">' + cat.icon + '</div>' +
+      '<div><div class="cat-name">' + cat.name + '</div><div class="cat-sub">' + list.length + ' paiement' + (list.length > 1 ? 's' : '') + '</div></div>' +
+      '<div class="cat-amt">' + fmt0(total) + '</div></div>';
+    list.forEach(function(i){
+      html += '<div class="entry-row"><span>' + new Date(i.date).toLocaleDateString('fr-CA') + ' — ' + esc(i.desc || 'Sans description') + ' — ' + fmt(i.amount) + '</span>' +
+        '<button class="entry-del" onclick="deleteIncome(' + i.id + ')" title="Supprimer">×</button></div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('rev-list').innerHTML = html;
+}
+function renderDashboard(){
+  renderIncomes();
+  document.getElementById('dash-revenue').textContent = fmt0(totalRevenue());
+  if(expenses.length === 0){
+    document.getElementById('cat-list').innerHTML = '<div class="empty-state">Aucune dépense enregistrée pour l\'instant.<br>Appuie sur "+ Ajouter" pour commencer.</div>';
+    document.getElementById('dash-total-deductible').textContent = fmt0(0);
+    document.getElementById('dash-net').textContent = fmt0(totalRevenue());
+    return;
+  }
+  var byCategory = {};
+  var grandTotalDeductible = 0;
+  expenses.forEach(function(e){
+    if(!byCategory[e.cat]) byCategory[e.cat] = [];
+    byCategory[e.cat].push(e);
+    grandTotalDeductible += e.amount * e.pct / 100;
+  });
+  var html = '';
+  Object.keys(byCategory).forEach(function(key){
+    var cat = CATEGORIES[key];
+    var catEntries = byCategory[key];
+    var catTotal = catEntries.reduce(function(sum, e){ return sum + (e.amount * e.pct / 100); }, 0);
+    html += '<div class="cat-row"><div class="cat-head">' +
+      '<div class="cat-icon" style="background:' + cat.bg + ';">' + cat.icon + '</div>' +
+      '<div><div class="cat-name">' + cat.name + '</div><div class="cat-sub">' + (cat.hasPct ? 'Au prorata' : cat.fixedRate + '% déductible') + '</div></div>' +
+      '<div class="cat-amt">' + fmt0(catTotal) + '</div></div>';
+    catEntries.forEach(function(e){
+      html += '<div class="entry-row"><span>' + (e.desc || 'Sans description') + ' — ' + fmt(e.amount) + '</span>' +
+        '<button class="entry-del" onclick="deleteExpense(' + e.id + ')" title="Supprimer">×</button></div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('cat-list').innerHTML = html;
+  document.getElementById('dash-total-deductible').textContent = fmt0(grandTotalDeductible);
+  document.getElementById('dash-net').textContent = fmt0(totalRevenue() - grandTotalDeductible);
+}
+function exportForAccountant(){
+  if(expenses.length === 0 && incomes.length === 0){ alert('Rien à exporter pour l\'instant.'); return; }
+  var rows = [['Date', 'Catégorie', 'Description', 'Montant payé', 'Taux déductible', 'Montant déductible']];
+  expenses.forEach(function(e){
+    var cat = CATEGORIES[e.cat];
+    var d = new Date(e.date);
+    rows.push([d.toLocaleDateString('fr-CA'), cat.name, e.desc || '', e.amount.toFixed(2), e.pct + '%', (e.amount * e.pct / 100).toFixed(2)]);
+  });
+  var grandTotal = expenses.reduce(function(sum, e){ return sum + (e.amount * e.pct / 100); }, 0);
+  rows.push([]);
+  rows.push(['', '', '', '', 'Total déductible:', grandTotal.toFixed(2)]);
+  rows.push(['', '', '', '', 'Revenus:', totalRevenue().toFixed(2)]);
+  rows.push(['', '', '', '', 'Net estimé:', (totalRevenue() - grandTotal).toFixed(2)]);
+  rows.push([]);
+  rows.push(['REVENUS']);
+  rows.push(['Date', 'Source', 'Description', 'Montant avant taxes', 'TPS+TVQ perçues']);
+  incomes.forEach(function(i){
+    rows.push([new Date(i.date).toLocaleDateString('fr-CA'), INCOME_CATS[i.cat].name, i.desc || '', i.amount.toFixed(2), (i.tax || 0).toFixed(2)]);
+  });
+  var csv = rows.map(function(row){
+    return row.map(function(cell){
+      var s = String(cell);
+      return s.indexOf(',') !== -1 ? '"' + s + '"' : s;
+    }).join(',');
+  }).join('\n');
+  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'BilanClair_' + new Date().toISOString().slice(0,10) + '.csv';
+  link.click();
+}
+function switchTab(page){
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.page === page); });
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page-' + page).classList.add('active');
+}
+function goToAdd(){ switchTab('add'); }
+document.querySelectorAll('.tab-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){ switchTab(btn.dataset.page); });
+});
+document.getElementById('inc-date').value = todayStr();
+loadData();
+renderDashboard();
+updateCalc();
+</script>
+</body>
+</html>
