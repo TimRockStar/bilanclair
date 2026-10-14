@@ -76,6 +76,11 @@
   .form-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:1.25rem;}
   input[type="date"]{width:100%;font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;outline:none;}
   .save-btn.green{background:var(--success);}
+  .sync-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:1.25rem;}
+  .sync-btn{width:100%;background:#635BFF;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;}
+  .sync-btn:disabled{opacity:0.6;cursor:default;}
+  .sync-status{font-size:12px;color:var(--sub);margin-top:8px;text-align:center;min-height:1.2em;}
+  .sync-link{background:none;border:none;color:var(--sub);font-size:11px;text-decoration:underline;cursor:pointer;display:block;margin:6px auto 0;}
   footer{text-align:center;font-size:11px;color:var(--sub);margin-top:2rem;}
 </style>
 </head>
@@ -115,6 +120,11 @@
   </div>
   <div class="page" id="page-rev">
     <div class="rev-total"><span>Revenus totaux</span><span id="rev-total">0 $</span></div>
+    <div class="sync-card">
+      <button class="sync-btn" id="sync-btn" onclick="syncStripe()">🔄 Synchroniser Stripe</button>
+      <div class="sync-status" id="sync-status"></div>
+      <button class="sync-link" onclick="resetStripeToken()">Changer le jeton</button>
+    </div>
     <div class="form-card">
       <div class="field">
         <label>Source</label>
@@ -350,7 +360,7 @@ function renderDashboard(){
       '<div><div class="cat-name">' + cat.name + '</div><div class="cat-sub">' + (cat.hasPct ? 'Au prorata' : cat.fixedRate + '% déductible') + '</div></div>' +
       '<div class="cat-amt">' + fmt0(catTotal) + '</div></div>';
     catEntries.forEach(function(e){
-      html += '<div class="entry-row"><span>' + (e.desc || 'Sans description') + ' — ' + fmt(e.amount) + '</span>' +
+      html += '<div class="entry-row"><span>' + esc(e.desc || 'Sans description') + ' — ' + fmt(e.amount) + '</span>' +
         '<button class="entry-del" onclick="deleteExpense(' + e.id + ')" title="Supprimer">×</button></div>';
     });
     html += '</div>';
@@ -389,6 +399,75 @@ function exportForAccountant(){
   link.href = URL.createObjectURL(blob);
   link.download = 'BilanClair_' + new Date().toISOString().slice(0,10) + '.csv';
   link.click();
+}
+var STRIPE_WORKER = 'https://damp-math-1fc9bilanclair-stripe.smartgrocer.workers.dev';
+var TOKEN_KEY = 'bilanclair_stripe_token';
+function getStripeToken(){
+  try{ return localStorage.getItem(TOKEN_KEY) || ''; }catch(e){ return ''; }
+}
+function resetStripeToken(){
+  try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
+  document.getElementById('sync-status').textContent = 'Jeton effacé. Il sera redemandé à la prochaine synchro.';
+}
+async function syncStripe(){
+  var btn = document.getElementById('sync-btn');
+  var status = document.getElementById('sync-status');
+  var token = getStripeToken();
+  if(!token){
+    token = (prompt('Entre ton jeton (APP_TOKEN) :') || '').trim();
+    if(!token) return;
+  }
+  btn.disabled = true;
+  status.textContent = 'Synchronisation en cours…';
+  try{
+    var res = await fetch(STRIPE_WORKER + '/', { headers: { Authorization: 'Bearer ' + token } });
+    if(res.status === 401){
+      try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
+      status.textContent = 'Jeton refusé. Réessaie avec le bon jeton.';
+      return;
+    }
+    var data = await res.json();
+    if(!res.ok){ status.textContent = 'Erreur : ' + (data.error || res.status); return; }
+    try{ localStorage.setItem(TOKEN_KEY, token); }catch(e){}
+
+    var known = {};
+    incomes.forEach(function(i){ if(i.sid) known[i.sid] = true; });
+    expenses.forEach(function(e){ if(e.sid) known[e.sid] = true; });
+
+    var n = 0, nInc = 0, nFee = 0, skippedCur = 0;
+    data.transactions.forEach(function(t){
+      if(t.devise !== 'cad'){ skippedCur++; return; }
+      var date = t.date;
+      var label = t.description || 'Stripe';
+      var isIncome = (t.type === 'charge' || t.type === 'payment');
+      var isRefund = (t.type === 'refund' || t.type === 'payment_refund');
+      if((isIncome || isRefund) && !known[t.id]){
+        incomes.push({ id: Date.now() + (n++), cat: 'contrat', amount: t.montant, tax: 0,
+          desc: (isRefund ? 'Remboursement — ' : 'Stripe — ') + label, date: date, sid: t.id });
+        nInc++;
+      }
+      if((isIncome || isRefund) && t.frais !== 0 && !known[t.id + ':fee']){
+        expenses.push({ id: Date.now() + (n++), cat: 'bancaire', amount: t.frais, pct: 100,
+          desc: 'Frais Stripe — ' + label, date: date, sid: t.id + ':fee' });
+        nFee++;
+      }
+      if(t.type === 'stripe_fee' && !known[t.id]){
+        expenses.push({ id: Date.now() + (n++), cat: 'bancaire', amount: -t.montant, pct: 100,
+          desc: 'Frais Stripe — ' + label, date: date, sid: t.id });
+        nFee++;
+      }
+    });
+    saveData();
+    renderDashboard();
+    var msg = nInc + ' revenu(s) et ' + nFee + ' frais ajoutés.';
+    if(nInc === 0 && nFee === 0) msg = 'Déjà à jour, rien de nouveau.';
+    if(skippedCur) msg += ' ' + skippedCur + ' transaction(s) hors CAD ignorée(s).';
+    status.textContent = msg;
+  }catch(e){
+    status.textContent = 'Impossible de joindre le Worker. Vérifie ta connexion.';
+  }finally{
+    btn.disabled = false;
+  }
 }
 function switchTab(page){
   document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.page === page); });
