@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BilanClair</title>
+<title>Freelance Ledger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -20,7 +20,7 @@
   .wrap{max-width:420px;margin:0 auto;padding:1.25rem 1.25rem 3rem;}
   header{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0 1.25rem;}
   .logo{font-size:16px;font-weight:700;color:var(--ink);}
-  .avatar{width:34px;height:34px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .lang-btn{min-width:42px;height:34px;border-radius:17px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer;padding:0 10px;}
   .tabs{display:flex;gap:6px;background:var(--card);border-radius:12px;padding:4px;margin-bottom:1.25rem;border:1px solid var(--border);}
   .tab-btn{flex:1;text-align:center;padding:9px 4px;font-size:12.5px;font-weight:600;color:var(--sub);background:none;border:none;border-radius:9px;cursor:pointer;}
   .tab-btn.active{background:var(--ink);color:#fff;}
@@ -100,146 +100,258 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="logo">📊 BilanClair</div>
-    <div class="avatar">👤</div>
+    <div class="logo">📊 Freelance Ledger</div>
+    <button class="lang-btn" id="lang-btn" onclick="toggleLang()">EN</button>
   </header>
   <div class="tabs">
-    <button class="tab-btn active" data-page="dash">Bilan</button>
-    <button class="tab-btn" data-page="rev">Revenus</button>
-    <button class="tab-btn" data-page="add">+ Dépense</button>
-    <button class="tab-btn" data-page="imp">📥 Import</button>
+    <button class="tab-btn active" data-page="dash" data-i18n="tab.dash"></button>
+    <button class="tab-btn" data-page="rev" data-i18n="tab.rev"></button>
+    <button class="tab-btn" data-page="add" data-i18n="tab.add"></button>
+    <button class="tab-btn" data-page="imp" data-i18n="tab.imp"></button>
   </div>
   <div class="page active" id="page-dash">
     <div class="stat-row">
       <div class="stat-card income" onclick="switchTab('rev')">
-        <div class="stat-label">Revenus</div>
+        <div class="stat-label" data-i18n="dash.income"></div>
         <div class="stat-val" id="dash-revenue">0 $</div>
-        <div class="stat-hint">Appuie pour voir le détail</div>
+        <div class="stat-hint" data-i18n="dash.hint"></div>
       </div>
       <div class="stat-card expense">
-        <div class="stat-label">Dépenses réelles</div>
+        <div class="stat-label" data-i18n="dash.expense"></div>
         <div class="stat-val" id="dash-total-deductible">0 $</div>
       </div>
     </div>
     <div class="net-card">
-      <span>Net estimé (après déductions)</span>
+      <span data-i18n="dash.net"></span>
       <span id="dash-net">0 $</span>
     </div>
     <div class="section-title">
-      <span>Dépenses par catégorie</span>
-      <button class="add-btn" onclick="goToAdd()">+ Ajouter</button>
+      <span data-i18n="dash.bycat"></span>
+      <button class="add-btn" onclick="goToAdd()" data-i18n="btn.add"></button>
     </div>
     <div id="cat-list"></div>
-    <button class="export-btn" onclick="exportForAccountant()"><span>📄</span> Exporter pour comptable</button>
+    <button class="export-btn" onclick="exportForAccountant()" data-i18n="btn.export"></button>
   </div>
   <div class="page" id="page-rev">
-    <div class="rev-total"><span>Revenus totaux</span><span id="rev-total">0 $</span></div>
+    <div class="rev-total"><span data-i18n="rev.total"></span><span id="rev-total">0 $</span></div>
     <div class="sync-card">
-      <button class="sync-btn" id="sync-btn" onclick="syncStripe()">🔄 Synchroniser Stripe</button>
+      <button class="sync-btn" id="sync-btn" onclick="syncStripe()" data-i18n="sync.btn"></button>
       <div class="sync-status" id="sync-status"></div>
-      <button class="sync-link" onclick="resetStripeToken()">Changer le jeton</button>
+      <button class="sync-link" onclick="resetStripeToken()" data-i18n="sync.change"></button>
     </div>
     <div class="form-card">
       <div class="field">
-        <label>Source</label>
-        <select id="inc-cat">
-          <option value="contrat">🛠️ Contrat d'application</option>
-          <option value="coaching">🎓 Coaching (bloc ou forfait)</option>
-          <option value="smartgrocer">🛒 SmartGrocer</option>
-          <option value="angloshift">🗣️ AngloShift</option>
-          <option value="autre">💰 Autre revenu</option>
-        </select>
+        <label data-i18n="lbl.source"></label>
+        <select id="inc-cat"></select>
       </div>
       <div class="field">
-        <label>Client ou description (optionnel)</label>
-        <input type="text" id="inc-desc" placeholder="Ex: Acompte 50 % — Boulangerie Dupuis">
+        <label data-i18n="lbl.client"></label>
+        <input type="text" id="inc-desc" data-i18n-ph="ph.client">
       </div>
       <div class="field">
-        <label>Montant avant taxes</label>
+        <label data-i18n="lbl.pretax"></label>
         <input type="number" id="inc-amount" placeholder="0.00" step="0.01">
       </div>
       <div class="field">
-        <label>TPS + TVQ perçues (optionnel)</label>
+        <label data-i18n="lbl.tax"></label>
         <input type="number" id="inc-tax" placeholder="0.00" step="0.01">
       </div>
       <div class="field">
-        <label>Date du paiement</label>
+        <label data-i18n="lbl.paydate"></label>
         <input type="date" id="inc-date">
       </div>
-      <button class="save-btn green" onclick="saveIncome()">Enregistrer le revenu</button>
+      <button class="save-btn green" onclick="saveIncome()" data-i18n="btn.saveinc"></button>
     </div>
-    <div class="section-title"><span>Revenus par source</span></div>
+    <div class="section-title"><span data-i18n="rev.bysource"></span></div>
     <div id="rev-list"></div>
   </div>
   <div class="page" id="page-add">
     <div class="field">
-      <label>Catégorie</label>
-      <select id="cat-select" onchange="updateCalc()">
-        <option value="bureau">🏠 Bureau à domicile</option>
-        <option value="vehicule">🚗 Véhicule</option>
-        <option value="fournitures">🧰 Fournitures et matériel</option>
-        <option value="telecom">📱 Téléphone et internet</option>
-        <option value="pro">💼 Frais professionnels</option>
-        <option value="repas">🍽️ Repas d'affaires</option>
-        <option value="assurances">🛡️ Assurances commerciales</option>
-        <option value="marketing">📣 Publicité et marketing</option>
-        <option value="formation">📚 Formation</option>
-        <option value="bancaire">🏦 Frais bancaires et intérêts</option>
-      </select>
+      <label data-i18n="lbl.category"></label>
+      <select id="cat-select" onchange="onCatChange()"></select>
     </div>
     <div class="field">
-      <label>Description (optionnel)</label>
-      <input type="text" id="desc-input" placeholder="Ex: Facture Bell juillet">
+      <label data-i18n="lbl.desc"></label>
+      <input type="text" id="desc-input" data-i18n-ph="ph.desc">
     </div>
     <div class="field">
-      <label>Montant payé</label>
+      <label data-i18n="lbl.paid"></label>
       <input type="number" id="amount-input" value="" placeholder="0.00" step="0.01" oninput="updateCalc()">
     </div>
     <div class="field" id="pct-field" style="display:none;">
-      <label id="pct-label">% d'usage professionnel</label>
+      <label id="pct-label"></label>
       <input type="number" id="pct-input" value="40" min="0" max="100" oninput="updateCalc()">
     </div>
     <div class="note-box" id="note-box"></div>
     <div class="calc-box">
-      <div class="calc-row"><span>Montant payé</span><span id="calc-amount">0,00 $</span></div>
-      <div class="calc-row"><span>Taux déductible</span><span id="calc-rate">50%</span></div>
-      <div class="calc-total"><span>Montant réellement déductible</span><span id="calc-final">0,00 $</span></div>
+      <div class="calc-row"><span data-i18n="calc.paid"></span><span id="calc-amount">0,00 $</span></div>
+      <div class="calc-row"><span data-i18n="calc.rate"></span><span id="calc-rate">50%</span></div>
+      <div class="calc-total"><span data-i18n="calc.final"></span><span id="calc-final">0,00 $</span></div>
     </div>
-    <button class="save-btn" onclick="saveExpense()">Enregistrer la dépense</button>
+    <button class="save-btn" onclick="saveExpense()" data-i18n="btn.saveexp"></button>
   </div>
   <div class="page" id="page-imp">
-    <div class="note-box">Importe le fichier CSV de tes transactions Tangerine. Le fichier est lu sur ton appareil seulement. Par défaut tout est « Ignorer » (sauf les cas évidents) : choisis une catégorie pour chaque ligne à garder.<br><br>Les virements Stripe sont déjà comptés par la synchro Stripe — laisse-les sur « Ignorer » pour ne pas les compter deux fois.</div>
-    <label class="save-btn file-label">📥 Choisir un fichier CSV<input type="file" id="imp-file" accept=".csv,text/csv" hidden></label>
+    <div class="note-box" data-i18n-h="imp.note"></div>
+    <label class="save-btn file-label"><span data-i18n="imp.choose"></span><input type="file" id="imp-file" accept=".csv,text/csv" hidden></label>
     <div class="sync-status" id="imp-status"></div>
     <div id="imp-list" style="margin-top:1rem;"></div>
-    <button class="save-btn green" id="imp-confirm" style="display:none;" onclick="confirmImport()">Importer</button>
+    <button class="save-btn green" id="imp-confirm" style="display:none;" onclick="confirmImport()"></button>
   </div>
-  <footer>Ceci est un outil d'organisation, pas un conseil fiscal — consulte un comptable pour ta situation précise.<br>Tes données restent uniquement sur cet appareil.</footer>
+  <footer data-i18n-h="footer"></footer>
 </div>
 <script>
-var CATEGORIES = {
-  bureau:      { name: 'Bureau à domicile', icon: '🏠', bg: '#E6F1FB', hasPct: true, defaultPct: 10, note: "Locataire : loyer, électricité, chauffage, eau, assurance locataire, internet, entretien. Propriétaire : intérêts hypothécaires (pas le capital), électricité, chauffage, assurance habitation, taxes foncières/scolaires, entretien." },
-  vehicule:    { name: 'Véhicule', icon: '🚗', bg: '#EEEDFE', hasPct: true, defaultPct: 40, note: "Essence, entretien/réparations, assurance auto, immatriculation, intérêts sur prêt auto (ou amortissement), stationnement d'affaires. Le permis de conduire n'est pas déductible — c'est une dépense personnelle, pas liée au travail." },
-  fournitures: { name: 'Fournitures et matériel', icon: '🧰', bg: '#E1F5EE', hasPct: false, fixedRate: 100, note: "Papeterie, imprimantes, ordinateurs, logiciels, petit équipement directement lié à ton travail — déductible à 100%." },
-  telecom:     { name: 'Téléphone et internet', icon: '📱', bg: '#FAEEDA', hasPct: true, defaultPct: 50, note: "La portion professionnelle de ton forfait cellulaire et de ton internet résidentiel — au prorata de ton usage réel pour le travail." },
-  pro:         { name: 'Frais professionnels', icon: '💼', bg: '#FAECE7', hasPct: false, fixedRate: 100, note: "Honoraires de comptable, avocat, notaire, consultant, sous-traitance, cotisations à un ordre professionnel. L'assurance-vie n'est PAS déductible." },
-  repas:       { name: "Repas d'affaires", icon: '🍽️', bg: '#FBEAF0', hasPct: false, fixedRate: 50, note: "Restaurants avec de vrais clients ou partenaires d'affaires — jamais tes repas personnels. Déductible à 50% seulement, selon Revenu Québec et l'ARC." },
-  assurances:  { name: 'Assurances commerciales', icon: '🛡️', bg: '#E8F0E6', hasPct: false, fixedRate: 100, note: "Assurance responsabilité professionnelle, assurance commerciale — déductible à 100%. Attention : l'assurance-vie, maladie et invalidité personnelle ne sont PAS déductibles, même si tu es travailleur autonome." },
-  marketing:   { name: 'Publicité et marketing', icon: '📣', bg: '#FDEDE3', hasPct: false, fixedRate: 100, note: "Site web, cartes d'affaires, publicités payantes, matériel promotionnel — tout ce qui sert à faire connaître ton travail est déductible à 100%." },
-  formation:   { name: 'Formation', icon: '📚', bg: '#EAF2FB', hasPct: false, fixedRate: 100, note: "Cours, séminaires, salons, livres et documentation liés directement à ton travail — déductible à 100%." },
-  bancaire:    { name: 'Frais bancaires et intérêts', icon: '🏦', bg: '#F3EEF9', hasPct: false, fixedRate: 100, note: "Frais de compte bancaire d'entreprise, frais de carte de crédit professionnelle, intérêts sur un emprunt d'entreprise — déductible à 100%." }
+/* ---------- Langue / Language ---------- */
+var LANG_KEY = 'bilanclair_lang';
+var lang = 'fr';
+var I18N = {
+  fr: {
+    'tab.dash': 'Bilan', 'tab.rev': 'Revenus', 'tab.add': '+ Dépense', 'tab.imp': '📥 Import',
+    'dash.income': 'Revenus', 'dash.hint': 'Appuie pour voir le détail', 'dash.expense': 'Dépenses réelles',
+    'dash.net': 'Net estimé (après déductions)', 'dash.bycat': 'Dépenses par catégorie',
+    'btn.add': '+ Ajouter', 'btn.export': '📄 Exporter pour comptable',
+    'dash.empty': 'Aucune dépense enregistrée pour l\'instant.<br>Appuie sur « + Ajouter » pour commencer.',
+    'rev.total': 'Revenus totaux', 'sync.btn': '🔄 Synchroniser Stripe', 'sync.change': 'Changer le jeton',
+    'lbl.source': 'Source', 'lbl.client': 'Client ou description (optionnel)', 'ph.client': 'Ex: Acompte 50 % — Boulangerie Dupuis',
+    'lbl.pretax': 'Montant avant taxes', 'lbl.tax': 'TPS + TVQ perçues (optionnel)', 'lbl.paydate': 'Date du paiement',
+    'btn.saveinc': 'Enregistrer le revenu', 'rev.bysource': 'Revenus par source',
+    'rev.empty': 'Aucun revenu enregistré pour l\'instant.<br>Ajoute ton premier paiement ci-dessus.',
+    'lbl.category': 'Catégorie', 'lbl.desc': 'Description (optionnel)', 'ph.desc': 'Ex: Facture Bell juillet',
+    'lbl.paid': 'Montant payé', 'calc.paid': 'Montant payé', 'calc.rate': 'Taux déductible', 'calc.final': 'Montant réellement déductible',
+    'btn.saveexp': 'Enregistrer la dépense', 'pct.default': '% d\'usage professionnel', 'pct.vehicle': '% d\'usage professionnel (kilométrage)',
+    'nodesc': 'Sans description', 'delete': 'Supprimer', 'prorated': 'Au prorata', 'deductible': '{n}% déductible',
+    'pay.one': '{n} paiement', 'pay.many': '{n} paiements',
+    'err.amount': 'Entre un montant valide.', 'confirm.exp': 'Supprimer cette dépense?', 'confirm.inc': 'Supprimer ce revenu?',
+    'err.nothing': 'Rien à exporter pour l\'instant.',
+    'cat.bureau': 'Bureau à domicile', 'cat.vehicule': 'Véhicule', 'cat.fournitures': 'Fournitures et matériel',
+    'cat.telecom': 'Téléphone et internet', 'cat.pro': 'Frais professionnels', 'cat.repas': 'Repas d\'affaires',
+    'cat.assurances': 'Assurances commerciales', 'cat.marketing': 'Publicité et marketing', 'cat.formation': 'Formation',
+    'cat.bancaire': 'Frais bancaires et intérêts',
+    'note.bureau': 'Locataire : loyer, électricité, chauffage, eau, assurance locataire, internet, entretien. Propriétaire : intérêts hypothécaires (pas le capital), électricité, chauffage, assurance habitation, taxes foncières/scolaires, entretien.',
+    'note.vehicule': 'Essence, entretien/réparations, assurance auto, immatriculation, intérêts sur prêt auto (ou amortissement), stationnement d\'affaires. Le permis de conduire n\'est pas déductible — c\'est une dépense personnelle, pas liée au travail.',
+    'note.fournitures': 'Papeterie, imprimantes, ordinateurs, logiciels, petit équipement directement lié à ton travail — déductible à 100%.',
+    'note.telecom': 'La portion professionnelle de ton forfait cellulaire et de ton internet résidentiel — au prorata de ton usage réel pour le travail.',
+    'note.pro': 'Honoraires de comptable, avocat, notaire, consultant, sous-traitance, cotisations à un ordre professionnel. L\'assurance-vie n\'est PAS déductible.',
+    'note.repas': 'Restaurants avec de vrais clients ou partenaires d\'affaires — jamais tes repas personnels. Déductible à 50% seulement, selon Revenu Québec et l\'ARC.',
+    'note.assurances': 'Assurance responsabilité professionnelle, assurance commerciale — déductible à 100%. Attention : l\'assurance-vie, maladie et invalidité personnelle ne sont PAS déductibles, même si tu es travailleur autonome.',
+    'note.marketing': 'Site web, cartes d\'affaires, publicités payantes, matériel promotionnel — tout ce qui sert à faire connaître ton travail est déductible à 100%.',
+    'note.formation': 'Cours, séminaires, salons, livres et documentation liés directement à ton travail — déductible à 100%.',
+    'note.bancaire': 'Frais de compte bancaire d\'entreprise, frais de carte de crédit professionnelle, intérêts sur un emprunt d\'entreprise — déductible à 100%.',
+    'icat.contrat': 'Contrat d\'application', 'icat.coaching': 'Coaching (bloc ou forfait)', 'icat.smartgrocer': 'SmartGrocer',
+    'icat.angloshift': 'AngloShift', 'icat.autre': 'Autre revenu',
+    'x.date': 'Date', 'x.category': 'Catégorie', 'x.desc': 'Description', 'x.paid': 'Montant payé', 'x.rate': 'Taux déductible',
+    'x.deduct': 'Montant déductible', 'x.totalded': 'Total déductible:', 'x.income': 'Revenus:', 'x.net': 'Net estimé:',
+    'x.incometitle': 'REVENUS', 'x.source': 'Source', 'x.pretax': 'Montant avant taxes', 'x.tax': 'TPS+TVQ perçues', 'x.file': 'FreelanceLedger_',
+    'sync.prompt': 'Entre ton jeton (APP_TOKEN) :', 'sync.cleared': 'Jeton effacé. Il sera redemandé à la prochaine synchro.',
+    'sync.running': 'Synchronisation en cours…', 'sync.nosecret': 'Jeton refusé : APP_TOKEN est absent du Worker.',
+    'sync.len': 'Jeton refusé : le Worker attend {exp} caractères, tu en as entré {got}.', 'sync.denied': 'Jeton refusé. Réessaie avec le bon jeton.',
+    'sync.err': 'Erreur : {e}', 'sync.added': '{n} revenu(s) et {f} frais ajoutés.', 'sync.uptodate': 'Déjà à jour, rien de nouveau.',
+    'sync.skipped': '{n} transaction(s) hors CAD ignorée(s).', 'sync.unreachable': 'Impossible de joindre le Worker. Vérifie ta connexion.',
+    'stripe.refund': 'Remboursement — ', 'stripe.pay': 'Stripe — ', 'stripe.fee': 'Frais Stripe — ',
+    'imp.note': 'Importe le fichier CSV de tes transactions bancaires (ex. : Tangerine). Le fichier est lu sur ton appareil seulement. Par défaut tout est « Ignorer » (sauf les cas évidents) : choisis une catégorie pour chaque ligne à garder.<br><br>Les virements Stripe sont déjà comptés par la synchro Stripe — laisse-les sur « Ignorer » pour ne pas les compter deux fois.',
+    'imp.choose': '📥 Choisir un fichier CSV', 'imp.ignore': '— Ignorer —', 'imp.dup': 'Déjà importée',
+    'imp.err.empty': 'Fichier vide ou illisible.', 'imp.err.cols': 'Colonnes non reconnues. Colonnes trouvées : {cols}',
+    'imp.err.none': 'Aucune transaction trouvée dans ce fichier.',
+    'imp.read': '{n} transactions lues.', 'imp.readdup': '{n} transactions lues ({d} déjà importées).',
+    'imp.btn1': 'Importer {n} transaction', 'imp.btnN': 'Importer {n} transactions',
+    'imp.done': '✓ {e} dépense(s) et {i} revenu(s) importés.',
+    'footer': 'Ceci est un outil d\'organisation, pas un conseil fiscal — consulte un comptable pour ta situation précise.<br>Tes données restent uniquement sur cet appareil.'
+  },
+  en: {
+    'tab.dash': 'Summary', 'tab.rev': 'Income', 'tab.add': '+ Expense', 'tab.imp': '📥 Import',
+    'dash.income': 'Income', 'dash.hint': 'Tap for details', 'dash.expense': 'Deductible expenses',
+    'dash.net': 'Estimated net (after deductions)', 'dash.bycat': 'Expenses by category',
+    'btn.add': '+ Add', 'btn.export': '📄 Export for accountant',
+    'dash.empty': 'No expenses recorded yet.<br>Tap “+ Add” to get started.',
+    'rev.total': 'Total income', 'sync.btn': '🔄 Sync Stripe', 'sync.change': 'Change token',
+    'lbl.source': 'Source', 'lbl.client': 'Client or description (optional)', 'ph.client': 'E.g. 50% deposit — Dupuis Bakery',
+    'lbl.pretax': 'Amount before tax', 'lbl.tax': 'GST + QST collected (optional)', 'lbl.paydate': 'Payment date',
+    'btn.saveinc': 'Save income', 'rev.bysource': 'Income by source',
+    'rev.empty': 'No income recorded yet.<br>Add your first payment above.',
+    'lbl.category': 'Category', 'lbl.desc': 'Description (optional)', 'ph.desc': 'E.g. Bell bill, July',
+    'lbl.paid': 'Amount paid', 'calc.paid': 'Amount paid', 'calc.rate': 'Deductible rate', 'calc.final': 'Actual deductible amount',
+    'btn.saveexp': 'Save expense', 'pct.default': '% business use', 'pct.vehicle': '% business use (mileage)',
+    'nodesc': 'No description', 'delete': 'Delete', 'prorated': 'Prorated', 'deductible': '{n}% deductible',
+    'pay.one': '{n} payment', 'pay.many': '{n} payments',
+    'err.amount': 'Enter a valid amount.', 'confirm.exp': 'Delete this expense?', 'confirm.inc': 'Delete this income entry?',
+    'err.nothing': 'Nothing to export yet.',
+    'cat.bureau': 'Home office', 'cat.vehicule': 'Vehicle', 'cat.fournitures': 'Supplies and equipment',
+    'cat.telecom': 'Phone and internet', 'cat.pro': 'Professional fees', 'cat.repas': 'Business meals',
+    'cat.assurances': 'Business insurance', 'cat.marketing': 'Advertising and marketing', 'cat.formation': 'Training',
+    'cat.bancaire': 'Bank fees and interest',
+    'note.bureau': 'Tenants: rent, electricity, heating, water, tenant insurance, internet, upkeep. Owners: mortgage interest (not principal), electricity, heating, home insurance, property/school taxes, upkeep.',
+    'note.vehicule': 'Gas, maintenance/repairs, car insurance, registration, car loan interest (or depreciation), business parking. A driver\'s licence is not deductible — it\'s a personal expense, not work-related.',
+    'note.fournitures': 'Stationery, printers, computers, software, small equipment directly tied to your work — 100% deductible.',
+    'note.telecom': 'The business portion of your cell plan and home internet — in proportion to your actual use for work.',
+    'note.pro': 'Fees for an accountant, lawyer, notary or consultant, subcontracting, professional order dues. Life insurance is NOT deductible.',
+    'note.repas': 'Restaurants with real clients or business partners — never your personal meals. Only 50% deductible, according to Revenu Québec and the CRA.',
+    'note.assurances': 'Professional liability insurance, commercial insurance — 100% deductible. Careful: personal life, health and disability insurance are NOT deductible, even if you\'re self-employed.',
+    'note.marketing': 'Website, business cards, paid ads, promotional material — anything that helps people find out about your work is 100% deductible.',
+    'note.formation': 'Courses, seminars, trade shows, books and documentation directly related to your work — 100% deductible.',
+    'note.bancaire': 'Business bank account fees, business credit card fees, interest on a business loan — 100% deductible.',
+    'icat.contrat': 'App contract', 'icat.coaching': 'Coaching (block or package)', 'icat.smartgrocer': 'SmartGrocer',
+    'icat.angloshift': 'AngloShift', 'icat.autre': 'Other income',
+    'x.date': 'Date', 'x.category': 'Category', 'x.desc': 'Description', 'x.paid': 'Amount paid', 'x.rate': 'Deductible rate',
+    'x.deduct': 'Deductible amount', 'x.totalded': 'Total deductible:', 'x.income': 'Income:', 'x.net': 'Estimated net:',
+    'x.incometitle': 'INCOME', 'x.source': 'Source', 'x.pretax': 'Amount before tax', 'x.tax': 'GST+QST collected', 'x.file': 'FreelanceLedger_',
+    'sync.prompt': 'Enter your token (APP_TOKEN):', 'sync.cleared': 'Token cleared. It will be requested again at the next sync.',
+    'sync.running': 'Syncing…', 'sync.nosecret': 'Token rejected: APP_TOKEN is missing from the Worker.',
+    'sync.len': 'Token rejected: the Worker expects {exp} characters, you entered {got}.', 'sync.denied': 'Token rejected. Try again with the right token.',
+    'sync.err': 'Error: {e}', 'sync.added': '{n} income item(s) and {f} fee(s) added.', 'sync.uptodate': 'Already up to date, nothing new.',
+    'sync.skipped': '{n} non-CAD transaction(s) ignored.', 'sync.unreachable': 'Could not reach the Worker. Check your connection.',
+    'stripe.refund': 'Refund — ', 'stripe.pay': 'Stripe — ', 'stripe.fee': 'Stripe fee — ',
+    'imp.note': 'Import the CSV file of your bank transactions (e.g. Tangerine). The file is read on your device only. By default everything is “Ignore” (except obvious cases): pick a category for each line you want to keep.<br><br>Stripe payouts are already counted by the Stripe sync — leave them on “Ignore” so they aren\'t counted twice.',
+    'imp.choose': '📥 Choose a CSV file', 'imp.ignore': '— Ignore —', 'imp.dup': 'Already imported',
+    'imp.err.empty': 'Empty or unreadable file.', 'imp.err.cols': 'Unrecognized columns. Columns found: {cols}',
+    'imp.err.none': 'No transactions found in this file.',
+    'imp.read': '{n} transactions read.', 'imp.readdup': '{n} transactions read ({d} already imported).',
+    'imp.btn1': 'Import {n} transaction', 'imp.btnN': 'Import {n} transactions',
+    'imp.done': '✓ {e} expense(s) and {i} income item(s) imported.',
+    'footer': 'This is an organizing tool, not tax advice — consult an accountant for your specific situation.<br>Your data stays on this device only.'
+  }
 };
+function detectLang(){
+  try{
+    var s = localStorage.getItem(LANG_KEY);
+    if(s === 'fr' || s === 'en') return s;
+  }catch(e){}
+  return String(navigator.language || 'fr').toLowerCase().indexOf('en') === 0 ? 'en' : 'fr';
+}
+function t(key, vars){
+  var s = I18N[lang][key];
+  if(s === undefined) s = I18N.fr[key];
+  if(s === undefined) return key;
+  if(vars){ Object.keys(vars).forEach(function(k){ s = s.split('{' + k + '}').join(vars[k]); }); }
+  return s;
+}
+function locale(){ return lang === 'fr' ? 'fr-CA' : 'en-CA'; }
+function fmtDate(d){ return new Date(d).toLocaleDateString(locale()); }
+
+/* ---------- Données ---------- */
+var CATEGORIES = {
+  bureau:      { icon: '🏠', bg: '#E6F1FB', hasPct: true, defaultPct: 10 },
+  vehicule:    { icon: '🚗', bg: '#EEEDFE', hasPct: true, defaultPct: 40 },
+  fournitures: { icon: '🧰', bg: '#E1F5EE', hasPct: false, fixedRate: 100 },
+  telecom:     { icon: '📱', bg: '#FAEEDA', hasPct: true, defaultPct: 50 },
+  pro:         { icon: '💼', bg: '#FAECE7', hasPct: false, fixedRate: 100 },
+  repas:       { icon: '🍽️', bg: '#FBEAF0', hasPct: false, fixedRate: 50 },
+  assurances:  { icon: '🛡️', bg: '#E8F0E6', hasPct: false, fixedRate: 100 },
+  marketing:   { icon: '📣', bg: '#FDEDE3', hasPct: false, fixedRate: 100 },
+  formation:   { icon: '📚', bg: '#EAF2FB', hasPct: false, fixedRate: 100 },
+  bancaire:    { icon: '🏦', bg: '#F3EEF9', hasPct: false, fixedRate: 100 }
+};
+var INCOME_CATS = {
+  contrat:     { icon: "🛠️", bg: "#E6F1FB" },
+  coaching:    { icon: "🎓", bg: "#EEEDFE" },
+  smartgrocer: { icon: "🛒", bg: "#E1F5EE" },
+  angloshift:  { icon: "🗣️", bg: "#E6F1FB" },
+  autre:       { icon: "💰", bg: "#FAEEDA" }
+};
+function catName(key){ return t('cat.' + key); }
+function incName(key){ return t('icat.' + key); }
 var STORAGE_KEY = 'bilanclair_data';
 var expenses = [];
 var revenue = 0;
 var incomes = [];
-var INCOME_CATS = {
-  contrat:     { name: "Contrat d'application", icon: "🛠️", bg: "#E6F1FB" },
-  coaching:    { name: "Coaching", icon: "🎓", bg: "#EEEDFE" },
-  smartgrocer: { name: "SmartGrocer", icon: "🛒", bg: "#E1F5EE" },
-  angloshift:  { name: "AngloShift", icon: "🗣️", bg: "#E6F1FB" },
-  autre:       { name: "Autre revenu", icon: "💰", bg: "#FAEEDA" }
-};
 function loadData(){
   try{
     var raw = localStorage.getItem(STORAGE_KEY);
@@ -249,19 +361,47 @@ function loadData(){
       revenue = data.revenue || 0;
       incomes = data.incomes || [];
       if(revenue > 0 && incomes.length === 0){
-        incomes.push({ id: Date.now(), cat: 'autre', amount: revenue, tax: 0, desc: 'Revenus saisis avant la mise à jour', date: new Date().toISOString() });
+        incomes.push({ id: Date.now(), cat: 'autre', amount: revenue, tax: 0, desc: '', date: new Date().toISOString() });
       }
       revenue = 0;
     }
-  }catch(e){ console.error('Erreur de chargement:', e); }
+  }catch(e){ console.error('Load error:', e); }
 }
 function saveData(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ expenses: expenses, revenue: 0, incomes: incomes }));
-  }catch(e){ console.error('Erreur de sauvegarde:', e); }
+  }catch(e){ console.error('Save error:', e); }
 }
-function fmt(n){ return (n||0).toLocaleString('fr-CA', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' $'; }
-function fmt0(n){ return Math.round(n||0).toLocaleString('fr-CA') + ' $'; }
+function money(n, dec){
+  var s = Math.abs(n || 0).toLocaleString(locale(), { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  var neg = (n || 0) < 0 ? '-' : '';
+  return lang === 'fr' ? neg + s + ' $' : neg + '$' + s;
+}
+function fmt(n){ return money(n, 2); }
+function fmt0(n){ return money(Math.round(n || 0), 0); }
+
+/* ---------- Statuts (retraduits au changement de langue) ---------- */
+var statusState = {};
+function setStatus(id, parts){ statusState[id] = parts; renderStatus(id); }
+function renderStatus(id){
+  var p = statusState[id];
+  document.getElementById(id).textContent = p ? p.map(function(x){ return t(x[0], x[1]); }).join(' ') : '';
+}
+
+/* ---------- Dépenses ---------- */
+function fillSelect(id, cats, nameFn){
+  var sel = document.getElementById(id);
+  var prev = sel.value;
+  sel.innerHTML = Object.keys(cats).map(function(k){
+    return '<option value="' + k + '">' + cats[k].icon + ' ' + nameFn(k) + '</option>';
+  }).join('');
+  if(prev && cats[prev]) sel.value = prev;
+}
+function onCatChange(){
+  var cat = CATEGORIES[document.getElementById('cat-select').value];
+  if(cat.hasPct) document.getElementById('pct-input').value = cat.defaultPct;
+  updateCalc();
+}
 function updateCalc(){
   var catKey = document.getElementById('cat-select').value;
   var cat = CATEGORIES[catKey];
@@ -272,13 +412,13 @@ function updateCalc(){
   if(cat.hasPct){
     pctField.style.display = 'block';
     document.getElementById('pct-input').value = document.getElementById('pct-input').value || cat.defaultPct;
-    pctLabel.textContent = catKey === 'vehicule' ? "% d'usage professionnel (kilométrage)" : "% d'usage professionnel";
+    pctLabel.textContent = t(catKey === 'vehicule' ? 'pct.vehicle' : 'pct.default');
     rate = parseFloat(document.getElementById('pct-input').value) || 0;
   } else {
     pctField.style.display = 'none';
     rate = cat.fixedRate;
   }
-  document.getElementById('note-box').textContent = cat.note;
+  document.getElementById('note-box').textContent = t('note.' + catKey);
   document.getElementById('calc-amount').textContent = fmt(amount);
   document.getElementById('calc-rate').textContent = rate + '%';
   document.getElementById('calc-final').textContent = fmt(amount * rate / 100);
@@ -287,7 +427,7 @@ function saveExpense(){
   var catKey = document.getElementById('cat-select').value;
   var cat = CATEGORIES[catKey];
   var amount = parseFloat(document.getElementById('amount-input').value) || 0;
-  if(amount <= 0){ alert('Entre un montant valide.'); return; }
+  if(amount <= 0){ alert(t('err.amount')); return; }
   var pct = cat.hasPct ? (parseFloat(document.getElementById('pct-input').value) || 0) : cat.fixedRate;
   var desc = document.getElementById('desc-input').value.trim();
   expenses.push({ id: Date.now(), cat: catKey, amount: amount, pct: pct, desc: desc, date: new Date().toISOString() });
@@ -298,17 +438,19 @@ function saveExpense(){
   document.getElementById('desc-input').value = '';
 }
 function deleteExpense(id){
-  if(!confirm('Supprimer cette dépense?')) return;
+  if(!confirm(t('confirm.exp'))) return;
   expenses = expenses.filter(function(e){ return e.id !== id; });
   saveData();
   renderDashboard();
 }
+
+/* ---------- Revenus ---------- */
 function totalRevenue(){ return incomes.reduce(function(sum, i){ return sum + i.amount; }, 0); }
-function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function todayStr(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function saveIncome(){
   var amount = parseFloat(document.getElementById('inc-amount').value) || 0;
-  if(amount <= 0){ alert('Entre un montant valide.'); return; }
+  if(amount <= 0){ alert(t('err.amount')); return; }
   var tax = parseFloat(document.getElementById('inc-tax').value) || 0;
   var dateVal = document.getElementById('inc-date').value || todayStr();
   incomes.push({
@@ -327,7 +469,7 @@ function saveIncome(){
   document.getElementById('inc-date').value = todayStr();
 }
 function deleteIncome(id){
-  if(!confirm('Supprimer ce revenu?')) return;
+  if(!confirm(t('confirm.inc'))) return;
   incomes = incomes.filter(function(i){ return i.id !== id; });
   saveData();
   renderDashboard();
@@ -335,7 +477,7 @@ function deleteIncome(id){
 function renderIncomes(){
   document.getElementById('rev-total').textContent = fmt(totalRevenue());
   if(incomes.length === 0){
-    document.getElementById('rev-list').innerHTML = '<div class="empty-state">Aucun revenu enregistré pour l\'instant.<br>Ajoute ton premier paiement ci-dessus.</div>';
+    document.getElementById('rev-list').innerHTML = '<div class="empty-state">' + t('rev.empty') + '</div>';
     return;
   }
   var html = '';
@@ -347,11 +489,11 @@ function renderIncomes(){
     var total = list.reduce(function(sum, i){ return sum + i.amount; }, 0);
     html += '<div class="cat-row"><div class="cat-head">' +
       '<div class="cat-icon" style="background:' + cat.bg + ';">' + cat.icon + '</div>' +
-      '<div><div class="cat-name">' + cat.name + '</div><div class="cat-sub">' + list.length + ' paiement' + (list.length > 1 ? 's' : '') + '</div></div>' +
+      '<div><div class="cat-name">' + incName(key) + '</div><div class="cat-sub">' + t(list.length > 1 ? 'pay.many' : 'pay.one', { n: list.length }) + '</div></div>' +
       '<div class="cat-amt">' + fmt0(total) + '</div></div>';
     list.forEach(function(i){
-      html += '<div class="entry-row"><span>' + new Date(i.date).toLocaleDateString('fr-CA') + ' — ' + esc(i.desc || 'Sans description') + ' — ' + fmt(i.amount) + '</span>' +
-        '<button class="entry-del" onclick="deleteIncome(' + i.id + ')" title="Supprimer">×</button></div>';
+      html += '<div class="entry-row"><span>' + fmtDate(i.date) + ' — ' + esc(i.desc || t('nodesc')) + ' — ' + fmt(i.amount) + '</span>' +
+        '<button class="entry-del" onclick="deleteIncome(' + i.id + ')" title="' + t('delete') + '">×</button></div>';
     });
     html += '</div>';
   });
@@ -361,7 +503,7 @@ function renderDashboard(){
   renderIncomes();
   document.getElementById('dash-revenue').textContent = fmt0(totalRevenue());
   if(expenses.length === 0){
-    document.getElementById('cat-list').innerHTML = '<div class="empty-state">Aucune dépense enregistrée pour l\'instant.<br>Appuie sur "+ Ajouter" pour commencer.</div>';
+    document.getElementById('cat-list').innerHTML = '<div class="empty-state">' + t('dash.empty') + '</div>';
     document.getElementById('dash-total-deductible').textContent = fmt0(0);
     document.getElementById('dash-net').textContent = fmt0(totalRevenue());
     return;
@@ -380,11 +522,11 @@ function renderDashboard(){
     var catTotal = catEntries.reduce(function(sum, e){ return sum + (e.amount * e.pct / 100); }, 0);
     html += '<div class="cat-row"><div class="cat-head">' +
       '<div class="cat-icon" style="background:' + cat.bg + ';">' + cat.icon + '</div>' +
-      '<div><div class="cat-name">' + cat.name + '</div><div class="cat-sub">' + (cat.hasPct ? 'Au prorata' : cat.fixedRate + '% déductible') + '</div></div>' +
+      '<div><div class="cat-name">' + catName(key) + '</div><div class="cat-sub">' + (cat.hasPct ? t('prorated') : t('deductible', { n: cat.fixedRate })) + '</div></div>' +
       '<div class="cat-amt">' + fmt0(catTotal) + '</div></div>';
     catEntries.forEach(function(e){
-      html += '<div class="entry-row"><span>' + esc(e.desc || 'Sans description') + ' — ' + fmt(e.amount) + '</span>' +
-        '<button class="entry-del" onclick="deleteExpense(' + e.id + ')" title="Supprimer">×</button></div>';
+      html += '<div class="entry-row"><span>' + esc(e.desc || t('nodesc')) + ' — ' + fmt(e.amount) + '</span>' +
+        '<button class="entry-del" onclick="deleteExpense(' + e.id + ')" title="' + t('delete') + '">×</button></div>';
     });
     html += '</div>';
   });
@@ -392,37 +534,38 @@ function renderDashboard(){
   document.getElementById('dash-total-deductible').textContent = fmt0(grandTotalDeductible);
   document.getElementById('dash-net').textContent = fmt0(totalRevenue() - grandTotalDeductible);
 }
+
+/* ---------- Export ---------- */
+function csvCell(cell){
+  var s = String(cell);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
 function exportForAccountant(){
-  if(expenses.length === 0 && incomes.length === 0){ alert('Rien à exporter pour l\'instant.'); return; }
-  var rows = [['Date', 'Catégorie', 'Description', 'Montant payé', 'Taux déductible', 'Montant déductible']];
+  if(expenses.length === 0 && incomes.length === 0){ alert(t('err.nothing')); return; }
+  var rows = [[t('x.date'), t('x.category'), t('x.desc'), t('x.paid'), t('x.rate'), t('x.deduct')]];
   expenses.forEach(function(e){
-    var cat = CATEGORIES[e.cat];
-    var d = new Date(e.date);
-    rows.push([d.toLocaleDateString('fr-CA'), cat.name, e.desc || '', e.amount.toFixed(2), e.pct + '%', (e.amount * e.pct / 100).toFixed(2)]);
+    rows.push([fmtDate(e.date), catName(e.cat), e.desc || '', e.amount.toFixed(2), e.pct + '%', (e.amount * e.pct / 100).toFixed(2)]);
   });
   var grandTotal = expenses.reduce(function(sum, e){ return sum + (e.amount * e.pct / 100); }, 0);
   rows.push([]);
-  rows.push(['', '', '', '', 'Total déductible:', grandTotal.toFixed(2)]);
-  rows.push(['', '', '', '', 'Revenus:', totalRevenue().toFixed(2)]);
-  rows.push(['', '', '', '', 'Net estimé:', (totalRevenue() - grandTotal).toFixed(2)]);
+  rows.push(['', '', '', '', t('x.totalded'), grandTotal.toFixed(2)]);
+  rows.push(['', '', '', '', t('x.income'), totalRevenue().toFixed(2)]);
+  rows.push(['', '', '', '', t('x.net'), (totalRevenue() - grandTotal).toFixed(2)]);
   rows.push([]);
-  rows.push(['REVENUS']);
-  rows.push(['Date', 'Source', 'Description', 'Montant avant taxes', 'TPS+TVQ perçues']);
+  rows.push([t('x.incometitle')]);
+  rows.push([t('x.date'), t('x.source'), t('x.desc'), t('x.pretax'), t('x.tax')]);
   incomes.forEach(function(i){
-    rows.push([new Date(i.date).toLocaleDateString('fr-CA'), INCOME_CATS[i.cat].name, i.desc || '', i.amount.toFixed(2), (i.tax || 0).toFixed(2)]);
+    rows.push([fmtDate(i.date), incName(i.cat), i.desc || '', i.amount.toFixed(2), (i.tax || 0).toFixed(2)]);
   });
-  var csv = rows.map(function(row){
-    return row.map(function(cell){
-      var s = String(cell);
-      return s.indexOf(',') !== -1 ? '"' + s + '"' : s;
-    }).join(',');
-  }).join('\n');
-  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  var csv = rows.map(function(row){ return row.map(csvCell).join(','); }).join('\n');
+  var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
   var link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = 'BilanClair_' + new Date().toISOString().slice(0,10) + '.csv';
+  link.download = t('x.file') + new Date().toISOString().slice(0,10) + '.csv';
   link.click();
 }
+
+/* ---------- Stripe ---------- */
 var STRIPE_WORKER = 'https://damp-math-1fc9bilanclair-stripe.smartgrocer.workers.dev';
 var TOKEN_KEY = 'bilanclair_stripe_token';
 function getStripeToken(){
@@ -430,18 +573,17 @@ function getStripeToken(){
 }
 function resetStripeToken(){
   try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
-  document.getElementById('sync-status').textContent = 'Jeton effacé. Il sera redemandé à la prochaine synchro.';
+  setStatus('sync-status', [['sync.cleared']]);
 }
 async function syncStripe(){
   var btn = document.getElementById('sync-btn');
-  var status = document.getElementById('sync-status');
   var token = getStripeToken();
   if(!token){
-    token = (prompt('Entre ton jeton (APP_TOKEN) :') || '').trim();
+    token = (prompt(t('sync.prompt')) || '').trim();
     if(!token) return;
   }
   btn.disabled = true;
-  status.textContent = 'Synchronisation en cours…';
+  setStatus('sync-status', [['sync.running']]);
   try{
     var res = await fetch(STRIPE_WORKER + '/', { headers: { Authorization: 'Bearer ' + token } });
     if(res.status === 401){
@@ -449,16 +591,16 @@ async function syncStripe(){
       var d = {};
       try{ d = (await res.json()).detail || {}; }catch(e){}
       if(d.secretConfigure === false){
-        status.textContent = 'Jeton refusé : APP_TOKEN est absent du Worker.';
+        setStatus('sync-status', [['sync.nosecret']]);
       } else if(d.longueurAttendue !== undefined){
-        status.textContent = 'Jeton refusé : le Worker attend ' + d.longueurAttendue + ' caractères, tu en as entré ' + d.longueurRecue + '.';
+        setStatus('sync-status', [['sync.len', { exp: d.longueurAttendue, got: d.longueurRecue }]]);
       } else {
-        status.textContent = 'Jeton refusé. Réessaie avec le bon jeton.';
+        setStatus('sync-status', [['sync.denied']]);
       }
       return;
     }
     var data = await res.json();
-    if(!res.ok){ status.textContent = 'Erreur : ' + (data.error || res.status); return; }
+    if(!res.ok){ setStatus('sync-status', [['sync.err', { e: data.error || res.status }]]); return; }
     try{ localStorage.setItem(TOKEN_KEY, token); }catch(e){}
 
     var known = {};
@@ -466,40 +608,40 @@ async function syncStripe(){
     expenses.forEach(function(e){ if(e.sid) known[e.sid] = true; });
 
     var n = 0, nInc = 0, nFee = 0, skippedCur = 0;
-    data.transactions.forEach(function(t){
-      if(t.devise !== 'cad'){ skippedCur++; return; }
-      var date = t.date;
-      var label = t.description || 'Stripe';
-      var isIncome = (t.type === 'charge' || t.type === 'payment');
-      var isRefund = (t.type === 'refund' || t.type === 'payment_refund');
-      if((isIncome || isRefund) && !known[t.id]){
-        incomes.push({ id: Date.now() + (n++), cat: 'contrat', amount: t.montant, tax: 0,
-          desc: (isRefund ? 'Remboursement — ' : 'Stripe — ') + label, date: date, sid: t.id });
+    data.transactions.forEach(function(tx){
+      if(tx.devise !== 'cad'){ skippedCur++; return; }
+      var date = tx.date;
+      var label = tx.description || 'Stripe';
+      var isIncome = (tx.type === 'charge' || tx.type === 'payment');
+      var isRefund = (tx.type === 'refund' || tx.type === 'payment_refund');
+      if((isIncome || isRefund) && !known[tx.id]){
+        incomes.push({ id: Date.now() + (n++), cat: 'contrat', amount: tx.montant, tax: 0,
+          desc: (isRefund ? t('stripe.refund') : t('stripe.pay')) + label, date: date, sid: tx.id });
         nInc++;
       }
-      if((isIncome || isRefund) && t.frais !== 0 && !known[t.id + ':fee']){
-        expenses.push({ id: Date.now() + (n++), cat: 'bancaire', amount: t.frais, pct: 100,
-          desc: 'Frais Stripe — ' + label, date: date, sid: t.id + ':fee' });
+      if((isIncome || isRefund) && tx.frais !== 0 && !known[tx.id + ':fee']){
+        expenses.push({ id: Date.now() + (n++), cat: 'bancaire', amount: tx.frais, pct: 100,
+          desc: t('stripe.fee') + label, date: date, sid: tx.id + ':fee' });
         nFee++;
       }
-      if(t.type === 'stripe_fee' && !known[t.id]){
-        expenses.push({ id: Date.now() + (n++), cat: 'bancaire', amount: -t.montant, pct: 100,
-          desc: 'Frais Stripe — ' + label, date: date, sid: t.id });
+      if(tx.type === 'stripe_fee' && !known[tx.id]){
+        expenses.push({ id: Date.now() + (n++), cat: 'bancaire', amount: -tx.montant, pct: 100,
+          desc: t('stripe.fee') + label, date: date, sid: tx.id });
         nFee++;
       }
     });
     saveData();
     renderDashboard();
-    var msg = nInc + ' revenu(s) et ' + nFee + ' frais ajoutés.';
-    if(nInc === 0 && nFee === 0) msg = 'Déjà à jour, rien de nouveau.';
-    if(skippedCur) msg += ' ' + skippedCur + ' transaction(s) hors CAD ignorée(s).';
-    status.textContent = msg;
+    var parts = (nInc === 0 && nFee === 0) ? [['sync.uptodate']] : [['sync.added', { n: nInc, f: nFee }]];
+    if(skippedCur) parts.push(['sync.skipped', { n: skippedCur }]);
+    setStatus('sync-status', parts);
   }catch(e){
-    status.textContent = 'Impossible de joindre le Worker. Vérifie ta connexion.';
+    setStatus('sync-status', [['sync.unreachable']]);
   }finally{
     btn.disabled = false;
   }
 }
+
 /* ---------- Import CSV (Tangerine et autres banques) ---------- */
 var importRows = [];
 var IMPORT_HINTS = [
@@ -558,7 +700,7 @@ function parseDateStr(s, dmy){
 }
 function analyzeCSV(text){
   var rows = parseCSV(text);
-  if(rows.length < 2) return { error: 'Fichier vide ou illisible.' };
+  if(rows.length < 2) return { err: ['imp.err.empty'] };
   var head = rows[0].map(stripAccents);
   function find(re, skip){
     for(var i = 0; i < head.length; i++){ if(i !== skip && re.test(head[i])) return i; }
@@ -573,7 +715,7 @@ function analyzeCSV(text){
   if(cName < 0) cName = find(/description/);
   var cMemo = find(/^(memo|note|details|description)/, cName);
   if(cDate < 0 || (cAmt < 0 && cDeb < 0 && cCre < 0)){
-    return { error: 'Colonnes non reconnues. Colonnes trouvées : ' + rows[0].join(', ') };
+    return { err: ['imp.err.cols', { cols: rows[0].join(', ') }] };
   }
   var data = rows.slice(1);
   var dmy = data.some(function(r){
@@ -591,20 +733,20 @@ function analyzeCSV(text){
       amt = (!isNaN(cv) && cv) ? Math.abs(cv) : ((!isNaN(dv) && dv) ? -Math.abs(dv) : NaN);
     }
     if(cType >= 0 && !isNaN(amt)){
-      var t = stripAccents(r[cType] || '');
-      if(/^debit/.test(t)) amt = -Math.abs(amt);
-      else if(/^credit/.test(t)) amt = Math.abs(amt);
+      var ty = stripAccents(r[cType] || '');
+      if(/^debit/.test(ty)) amt = -Math.abs(amt);
+      else if(/^credit/.test(ty)) amt = Math.abs(amt);
     }
     if(isNaN(amt) || amt === 0) return;
     var name = ((cName >= 0 ? r[cName] : '') || '').trim();
     var memo = ((cMemo >= 0 ? r[cMemo] : '') || '').trim();
-    var desc = name || memo || 'Sans description';
+    var desc = name || memo || '';
     if(name && memo && memo !== name) desc += ' — ' + memo;
     var key = date + '|' + desc + '|' + amt.toFixed(2);
     seen[key] = (seen[key] || 0) + 1;
     out.push({ date: date, desc: desc, amt: amt, sid: 'csv:' + key + '#' + seen[key], choice: '', pct: 0, dup: false });
   });
-  if(out.length === 0) return { error: 'Aucune transaction trouvée dans ce fichier.' };
+  if(out.length === 0) return { err: ['imp.err.none'] };
   out.sort(function(a, b){ return a.date < b.date ? 1 : (a.date > b.date ? -1 : 0); });
   return { rows: out };
 }
@@ -621,21 +763,22 @@ function applyChoice(r, key){
 function importRowHTML(r, idx){
   var isExp = r.amt < 0;
   var cats = isExp ? CATEGORIES : INCOME_CATS;
+  var nameFn = isExp ? catName : incName;
   var cls = 'imp-row' + (r.choice ? ' on' : '') + (r.dup ? ' dup' : '');
   var html = '<div class="' + cls + '" id="imp-row-' + idx + '">' +
-    '<div class="imp-top"><div><div class="imp-desc">' + esc(r.desc) + '</div>' +
+    '<div class="imp-top"><div><div class="imp-desc">' + esc(r.desc || t('nodesc')) + '</div>' +
     '<div class="imp-date">' + r.date + '</div></div>' +
     '<div class="imp-amt ' + (isExp ? 'neg' : 'pos') + '">' + (isExp ? '−' : '+') + fmt(Math.abs(r.amt)) + '</div></div>';
   if(r.dup){
-    html += '<div class="imp-date" style="margin-top:6px;">Déjà importée</div>';
+    html += '<div class="imp-date" style="margin-top:6px;">' + t('imp.dup') + '</div>';
   } else {
-    html += '<select onchange="setImportChoice(' + idx + ', this.value)"><option value="">— Ignorer —</option>';
+    html += '<select onchange="setImportChoice(' + idx + ', this.value)"><option value="">' + t('imp.ignore') + '</option>';
     Object.keys(cats).forEach(function(k){
-      html += '<option value="' + k + '"' + (r.choice === k ? ' selected' : '') + '>' + cats[k].icon + ' ' + cats[k].name + '</option>';
+      html += '<option value="' + k + '"' + (r.choice === k ? ' selected' : '') + '>' + cats[k].icon + ' ' + nameFn(k) + '</option>';
     });
     html += '</select>';
     if(r.choice && isExp && CATEGORIES[r.choice].hasPct){
-      html += '<div class="imp-pct"><span>% d\'usage professionnel</span><input type="number" min="0" max="100" value="' + r.pct + '" oninput="setImportPct(' + idx + ', this.value)"></div>';
+      html += '<div class="imp-pct"><span>' + t('pct.default') + '</span><input type="number" min="0" max="100" value="' + r.pct + '" oninput="setImportPct(' + idx + ', this.value)"></div>';
     }
   }
   return html + '</div>';
@@ -644,7 +787,11 @@ function updateImportButton(){
   var n = importRows.filter(function(r){ return r.choice && !r.dup; }).length;
   var btn = document.getElementById('imp-confirm');
   btn.style.display = n > 0 ? 'block' : 'none';
-  btn.textContent = 'Importer ' + n + ' transaction' + (n > 1 ? 's' : '');
+  btn.textContent = t(n > 1 ? 'imp.btnN' : 'imp.btn1', { n: n });
+}
+function renderImportList(){
+  document.getElementById('imp-list').innerHTML = importRows.map(importRowHTML).join('');
+  updateImportButton();
 }
 function setImportChoice(idx, key){
   applyChoice(importRows[idx], key);
@@ -656,11 +803,9 @@ function setImportPct(idx, val){
   importRows[idx].pct = isNaN(p) ? 0 : Math.max(0, Math.min(100, p));
 }
 function handleImportText(text){
-  var status = document.getElementById('imp-status');
   var res = analyzeCSV(text);
   importRows = [];
-  document.getElementById('imp-list').innerHTML = '';
-  if(res.error){ status.textContent = res.error; updateImportButton(); return; }
+  if(res.err){ setStatus('imp-status', [res.err]); renderImportList(); return; }
   var known = {};
   incomes.forEach(function(i){ if(i.sid) known[i.sid] = true; });
   expenses.forEach(function(e){ if(e.sid) known[e.sid] = true; });
@@ -670,9 +815,8 @@ function handleImportText(text){
     else { var h = importHint(r); if(h) applyChoice(r, h); }
   });
   importRows = res.rows;
-  document.getElementById('imp-list').innerHTML = importRows.map(importRowHTML).join('');
-  status.textContent = importRows.length + ' transactions lues' + (nDup ? ' (' + nDup + ' déjà importées).' : '.');
-  updateImportButton();
+  renderImportList();
+  setStatus('imp-status', [nDup ? ['imp.readdup', { n: importRows.length, d: nDup }] : ['imp.read', { n: importRows.length }]]);
 }
 function confirmImport(){
   var nExp = 0, nInc = 0, k = 0;
@@ -691,9 +835,8 @@ function confirmImport(){
   saveData();
   renderDashboard();
   importRows = [];
-  document.getElementById('imp-list').innerHTML = '';
-  updateImportButton();
-  document.getElementById('imp-status').textContent = '✓ ' + nExp + ' dépense(s) et ' + nInc + ' revenu(s) importés.';
+  renderImportList();
+  setStatus('imp-status', [['imp.done', { e: nExp, i: nInc }]]);
 }
 document.getElementById('imp-file').addEventListener('change', function(ev){
   var f = ev.target.files[0];
@@ -709,6 +852,8 @@ document.getElementById('imp-file').addEventListener('change', function(ev){
   reader.readAsText(f, 'UTF-8');
   ev.target.value = '';
 });
+
+/* ---------- Navigation et langue ---------- */
 function switchTab(page){
   document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.page === page); });
   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
@@ -718,10 +863,31 @@ function goToAdd(){ switchTab('add'); }
 document.querySelectorAll('.tab-btn').forEach(function(btn){
   btn.addEventListener('click', function(){ switchTab(btn.dataset.page); });
 });
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-h]').forEach(function(el){ el.innerHTML = t(el.getAttribute('data-i18n-h')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+  var btn = document.getElementById('lang-btn');
+  btn.textContent = lang === 'fr' ? 'EN' : 'FR';
+  btn.title = lang === 'fr' ? 'English' : 'Français';
+  fillSelect('cat-select', CATEGORIES, catName);
+  fillSelect('inc-cat', INCOME_CATS, incName);
+  renderDashboard();
+  updateCalc();
+  renderImportList();
+  renderStatus('sync-status');
+  renderStatus('imp-status');
+}
+function toggleLang(){
+  lang = lang === 'fr' ? 'en' : 'fr';
+  try{ localStorage.setItem(LANG_KEY, lang); }catch(e){}
+  applyLang();
+}
+lang = detectLang();
 document.getElementById('inc-date').value = todayStr();
 loadData();
-renderDashboard();
-updateCalc();
+applyLang();
 </script>
 </body>
 </html>
