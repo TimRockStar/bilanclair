@@ -423,7 +423,15 @@ async function syncStripe(){
     var res = await fetch(STRIPE_WORKER + '/', { headers: { Authorization: 'Bearer ' + token } });
     if(res.status === 401){
       try{ localStorage.removeItem(TOKEN_KEY); }catch(e){}
-      status.textContent = 'Jeton refusé. Réessaie avec le bon jeton.';
+      var d = {};
+      try{ d = (await res.json()).detail || {}; }catch(e){}
+      if(d.secretConfigure === false){
+        status.textContent = 'Jeton refusé : APP_TOKEN est absent du Worker.';
+      } else if(d.longueurAttendue !== undefined){
+        status.textContent = 'Jeton refusé : le Worker attend ' + d.longueurAttendue + ' caractères, tu en as entré ' + d.longueurRecue + '.';
+      } else {
+        status.textContent = 'Jeton refusé. Réessaie avec le bon jeton.';
+      }
       return;
     }
     var data = await res.json();
