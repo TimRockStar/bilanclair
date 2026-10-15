@@ -22,7 +22,7 @@
   .logo{font-size:16px;font-weight:700;color:var(--ink);}
   .avatar{width:34px;height:34px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;}
   .tabs{display:flex;gap:6px;background:var(--card);border-radius:12px;padding:4px;margin-bottom:1.25rem;border:1px solid var(--border);}
-  .tab-btn{flex:1;text-align:center;padding:9px;font-size:13px;font-weight:600;color:var(--sub);background:none;border:none;border-radius:9px;cursor:pointer;}
+  .tab-btn{flex:1;text-align:center;padding:9px 4px;font-size:12.5px;font-weight:600;color:var(--sub);background:none;border:none;border-radius:9px;cursor:pointer;}
   .tab-btn.active{background:var(--ink);color:#fff;}
   .page{display:none;}
   .page.active{display:block;}
@@ -81,6 +81,19 @@
   .sync-btn:disabled{opacity:0.6;cursor:default;}
   .sync-status{font-size:12px;color:var(--sub);margin-top:8px;text-align:center;min-height:1.2em;}
   .sync-link{background:none;border:none;color:var(--sub);font-size:11px;text-decoration:underline;cursor:pointer;display:block;margin:6px auto 0;}
+  .file-label{display:block;text-align:center;cursor:pointer;}
+  .imp-row{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+  .imp-row.on{border-color:var(--ink-soft);}
+  .imp-row.dup{opacity:0.5;}
+  .imp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .imp-desc{font-size:13px;font-weight:600;word-break:break-word;}
+  .imp-date{font-size:11.5px;color:var(--sub);}
+  .imp-amt{font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;white-space:nowrap;}
+  .imp-amt.neg{color:var(--danger);}
+  .imp-amt.pos{color:var(--success);}
+  .imp-row select{margin-top:8px;font-size:13px;padding:8px 10px;}
+  .imp-pct{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--sub);}
+  .imp-pct input{width:80px;font-size:13px;padding:6px 8px;}
   footer{text-align:center;font-size:11px;color:var(--sub);margin-top:2rem;}
 </style>
 </head>
@@ -91,9 +104,10 @@
     <div class="avatar">👤</div>
   </header>
   <div class="tabs">
-    <button class="tab-btn active" data-page="dash">Tableau de bord</button>
+    <button class="tab-btn active" data-page="dash">Bilan</button>
     <button class="tab-btn" data-page="rev">Revenus</button>
     <button class="tab-btn" data-page="add">+ Dépense</button>
+    <button class="tab-btn" data-page="imp">📥 Import</button>
   </div>
   <div class="page active" id="page-dash">
     <div class="stat-row">
@@ -192,6 +206,13 @@
       <div class="calc-total"><span>Montant réellement déductible</span><span id="calc-final">0,00 $</span></div>
     </div>
     <button class="save-btn" onclick="saveExpense()">Enregistrer la dépense</button>
+  </div>
+  <div class="page" id="page-imp">
+    <div class="note-box">Importe le fichier CSV de tes transactions Tangerine. Le fichier est lu sur ton appareil seulement. Par défaut tout est « Ignorer » (sauf les cas évidents) : choisis une catégorie pour chaque ligne à garder.<br><br>Les virements Stripe sont déjà comptés par la synchro Stripe — laisse-les sur « Ignorer » pour ne pas les compter deux fois.</div>
+    <label class="save-btn file-label">📥 Choisir un fichier CSV<input type="file" id="imp-file" accept=".csv,text/csv" hidden></label>
+    <div class="sync-status" id="imp-status"></div>
+    <div id="imp-list" style="margin-top:1rem;"></div>
+    <button class="save-btn green" id="imp-confirm" style="display:none;" onclick="confirmImport()">Importer</button>
   </div>
   <footer>Ceci est un outil d'organisation, pas un conseil fiscal — consulte un comptable pour ta situation précise.<br>Tes données restent uniquement sur cet appareil.</footer>
 </div>
@@ -479,6 +500,215 @@ async function syncStripe(){
     btn.disabled = false;
   }
 }
+/* ---------- Import CSV (Tangerine et autres banques) ---------- */
+var importRows = [];
+var IMPORT_HINTS = [
+  { re: /\b(bell|vid[ée]otron|fido|koodo|telus|rogers|virgin|fizz|public mobile)\b/i, cat: 'telecom' },
+  { re: /(anthropic|claude\.ai|openai|cloudflare|github|namecheap|godaddy|google \*?workspace)/i, cat: 'fournitures' }
+];
+function pad2(n){ return String(n).padStart(2, '0'); }
+function stripAccents(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+function parseCSV(text){
+  text = text.replace(/^﻿/, '');
+  var first = text.split(/\r?\n/)[0] || '';
+  var delim = first.split(';').length > first.split(',').length ? ';' : ',';
+  var rows = [], row = [], cell = '', inQ = false;
+  function endRow(){
+    row.push(cell); cell = '';
+    if(row.some(function(x){ return x.trim() !== ''; })) rows.push(row);
+    row = [];
+  }
+  for(var i = 0; i < text.length; i++){
+    var c = text[i];
+    if(inQ){
+      if(c === '"'){ if(text[i+1] === '"'){ cell += '"'; i++; } else inQ = false; }
+      else cell += c;
+    } else if(c === '"'){ inQ = true; }
+    else if(c === delim){ row.push(cell); cell = ''; }
+    else if(c === '\n' || c === '\r'){ if(c === '\r' && text[i+1] === '\n') i++; endRow(); }
+    else cell += c;
+  }
+  endRow();
+  return rows;
+}
+function parseAmount(s){
+  s = String(s || '').replace(/[\s$ ]/g, '');
+  if(!s) return NaN;
+  var neg = /^\(.*\)$/.test(s) || s.charAt(0) === '-' || s.charAt(0) === '−';
+  s = s.replace(/[()\-+−]/g, '');
+  if(/,\d{1,2}$/.test(s) && s.indexOf('.') === -1) s = s.replace(',', '.');
+  s = s.replace(/,/g, '');
+  var n = parseFloat(s);
+  if(isNaN(n)) return NaN;
+  return neg ? -n : n;
+}
+function parseDateStr(s, dmy){
+  s = String(s || '').trim();
+  var y, mo, d, m = /^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/.exec(s);
+  if(m){ y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else {
+    m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/.exec(s);
+    if(!m) return null;
+    var a = +m[1], b = +m[2]; y = +m[3];
+    if(y < 100) y += 2000;
+    if(dmy){ d = a; mo = b; } else { mo = a; d = b; }
+  }
+  if(mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  return y + '-' + pad2(mo) + '-' + pad2(d);
+}
+function analyzeCSV(text){
+  var rows = parseCSV(text);
+  if(rows.length < 2) return { error: 'Fichier vide ou illisible.' };
+  var head = rows[0].map(stripAccents);
+  function find(re, skip){
+    for(var i = 0; i < head.length; i++){ if(i !== skip && re.test(head[i])) return i; }
+    return -1;
+  }
+  var cDate = find(/date/);
+  var cAmt = find(/^(amount|montant)/);
+  var cDeb = find(/^(debit|retrait|withdraw)/);
+  var cCre = find(/^(credit|depot|deposit)/);
+  var cType = find(/^(transaction|type)$/);
+  var cName = find(/^(name|nom|payee|beneficiaire)/);
+  if(cName < 0) cName = find(/description/);
+  var cMemo = find(/^(memo|note|details|description)/, cName);
+  if(cDate < 0 || (cAmt < 0 && cDeb < 0 && cCre < 0)){
+    return { error: 'Colonnes non reconnues. Colonnes trouvées : ' + rows[0].join(', ') };
+  }
+  var data = rows.slice(1);
+  var dmy = data.some(function(r){
+    var m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.]\d{2,4}$/.exec((r[cDate] || '').trim());
+    return m && parseInt(m[1], 10) > 12;
+  });
+  var out = [], seen = {};
+  data.forEach(function(r){
+    var date = parseDateStr(r[cDate], dmy);
+    if(!date) return;
+    var amt;
+    if(cAmt >= 0){ amt = parseAmount(r[cAmt]); }
+    else {
+      var dv = parseAmount(r[cDeb]), cv = parseAmount(r[cCre]);
+      amt = (!isNaN(cv) && cv) ? Math.abs(cv) : ((!isNaN(dv) && dv) ? -Math.abs(dv) : NaN);
+    }
+    if(cType >= 0 && !isNaN(amt)){
+      var t = stripAccents(r[cType] || '');
+      if(/^debit/.test(t)) amt = -Math.abs(amt);
+      else if(/^credit/.test(t)) amt = Math.abs(amt);
+    }
+    if(isNaN(amt) || amt === 0) return;
+    var name = ((cName >= 0 ? r[cName] : '') || '').trim();
+    var memo = ((cMemo >= 0 ? r[cMemo] : '') || '').trim();
+    var desc = name || memo || 'Sans description';
+    if(name && memo && memo !== name) desc += ' — ' + memo;
+    var key = date + '|' + desc + '|' + amt.toFixed(2);
+    seen[key] = (seen[key] || 0) + 1;
+    out.push({ date: date, desc: desc, amt: amt, sid: 'csv:' + key + '#' + seen[key], choice: '', pct: 0, dup: false });
+  });
+  if(out.length === 0) return { error: 'Aucune transaction trouvée dans ce fichier.' };
+  out.sort(function(a, b){ return a.date < b.date ? 1 : (a.date > b.date ? -1 : 0); });
+  return { rows: out };
+}
+function importHint(r){
+  if(r.amt >= 0) return '';
+  for(var i = 0; i < IMPORT_HINTS.length; i++){ if(IMPORT_HINTS[i].re.test(r.desc)) return IMPORT_HINTS[i].cat; }
+  return '';
+}
+function applyChoice(r, key){
+  r.choice = key;
+  r.pct = 0;
+  if(key && r.amt < 0 && CATEGORIES[key].hasPct) r.pct = CATEGORIES[key].defaultPct;
+}
+function importRowHTML(r, idx){
+  var isExp = r.amt < 0;
+  var cats = isExp ? CATEGORIES : INCOME_CATS;
+  var cls = 'imp-row' + (r.choice ? ' on' : '') + (r.dup ? ' dup' : '');
+  var html = '<div class="' + cls + '" id="imp-row-' + idx + '">' +
+    '<div class="imp-top"><div><div class="imp-desc">' + esc(r.desc) + '</div>' +
+    '<div class="imp-date">' + r.date + '</div></div>' +
+    '<div class="imp-amt ' + (isExp ? 'neg' : 'pos') + '">' + (isExp ? '−' : '+') + fmt(Math.abs(r.amt)) + '</div></div>';
+  if(r.dup){
+    html += '<div class="imp-date" style="margin-top:6px;">Déjà importée</div>';
+  } else {
+    html += '<select onchange="setImportChoice(' + idx + ', this.value)"><option value="">— Ignorer —</option>';
+    Object.keys(cats).forEach(function(k){
+      html += '<option value="' + k + '"' + (r.choice === k ? ' selected' : '') + '>' + cats[k].icon + ' ' + cats[k].name + '</option>';
+    });
+    html += '</select>';
+    if(r.choice && isExp && CATEGORIES[r.choice].hasPct){
+      html += '<div class="imp-pct"><span>% d\'usage professionnel</span><input type="number" min="0" max="100" value="' + r.pct + '" oninput="setImportPct(' + idx + ', this.value)"></div>';
+    }
+  }
+  return html + '</div>';
+}
+function updateImportButton(){
+  var n = importRows.filter(function(r){ return r.choice && !r.dup; }).length;
+  var btn = document.getElementById('imp-confirm');
+  btn.style.display = n > 0 ? 'block' : 'none';
+  btn.textContent = 'Importer ' + n + ' transaction' + (n > 1 ? 's' : '');
+}
+function setImportChoice(idx, key){
+  applyChoice(importRows[idx], key);
+  document.getElementById('imp-row-' + idx).outerHTML = importRowHTML(importRows[idx], idx);
+  updateImportButton();
+}
+function setImportPct(idx, val){
+  var p = parseFloat(val);
+  importRows[idx].pct = isNaN(p) ? 0 : Math.max(0, Math.min(100, p));
+}
+function handleImportText(text){
+  var status = document.getElementById('imp-status');
+  var res = analyzeCSV(text);
+  importRows = [];
+  document.getElementById('imp-list').innerHTML = '';
+  if(res.error){ status.textContent = res.error; updateImportButton(); return; }
+  var known = {};
+  incomes.forEach(function(i){ if(i.sid) known[i.sid] = true; });
+  expenses.forEach(function(e){ if(e.sid) known[e.sid] = true; });
+  var nDup = 0;
+  res.rows.forEach(function(r){
+    if(known[r.sid]){ r.dup = true; nDup++; }
+    else { var h = importHint(r); if(h) applyChoice(r, h); }
+  });
+  importRows = res.rows;
+  document.getElementById('imp-list').innerHTML = importRows.map(importRowHTML).join('');
+  status.textContent = importRows.length + ' transactions lues' + (nDup ? ' (' + nDup + ' déjà importées).' : '.');
+  updateImportButton();
+}
+function confirmImport(){
+  var nExp = 0, nInc = 0, k = 0;
+  importRows.forEach(function(r){
+    if(!r.choice || r.dup) return;
+    var iso = new Date(r.date + 'T12:00:00').toISOString();
+    if(r.amt < 0){
+      var cat = CATEGORIES[r.choice];
+      expenses.push({ id: Date.now() + (k++), cat: r.choice, amount: -r.amt, pct: cat.hasPct ? r.pct : cat.fixedRate, desc: r.desc, date: iso, sid: r.sid });
+      nExp++;
+    } else {
+      incomes.push({ id: Date.now() + (k++), cat: r.choice, amount: r.amt, tax: 0, desc: r.desc, date: iso, sid: r.sid });
+      nInc++;
+    }
+  });
+  saveData();
+  renderDashboard();
+  importRows = [];
+  document.getElementById('imp-list').innerHTML = '';
+  updateImportButton();
+  document.getElementById('imp-status').textContent = '✓ ' + nExp + ' dépense(s) et ' + nInc + ' revenu(s) importés.';
+}
+document.getElementById('imp-file').addEventListener('change', function(ev){
+  var f = ev.target.files[0];
+  if(!f) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    if(String(reader.result).indexOf('�') !== -1){
+      var r2 = new FileReader();
+      r2.onload = function(){ handleImportText(r2.result); };
+      r2.readAsText(f, 'windows-1252');
+    } else { handleImportText(reader.result); }
+  };
+  reader.readAsText(f, 'UTF-8');
+  ev.target.value = '';
+});
 function switchTab(page){
   document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.page === page); });
   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
